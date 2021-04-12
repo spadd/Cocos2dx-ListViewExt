@@ -77,7 +77,7 @@ bool HelloWorld::init()
     TableView->attachTo(lv, this);
     TableView->initDefaultItems(50);
 
-    TableView->jumpTo(49);
+    TableView->jumpTo(1);
   
     //runAction(Sequence::create(
     //    DelayTime::create(0),
@@ -114,12 +114,12 @@ Size HelloWorld::sizeSource(int index)
 
 Node* HelloWorld::loadSource(int index)
 {
-    Text* t = Text::create(std::to_string(index), "Arial", 18);
+    Text* t = Text::create(std::to_string(index), "fonts/Arial.ttf", 18);
     return t;
 }
 
 void HelloWorld::unloadSource(int index)
 {
-    CCLOG("do texture unload here:%d", index);
+    //CCLOG("do texture unload here:%d", index);
 }
 

@@ -16,9 +16,9 @@ void TableViewExt::initDefaultItems(int total)
 	//CCLOG("initDefaultItems self._headIndex=%d", _headIndex);
 	//CCLOG("initDefaultItems self._tailIndex=%d", _tailIndex);
 
-	for (int i = _headIndex; i < _tailIndex; i++)
+	for (int i = _headIndex; i <= _tailIndex; i++)
 	{
-		items.at(i)->removeAllChildren();
+		items.at(i-1)->removeAllChildren();
 		_impl->unloadSource(i);
 	}
 	_headIndex = 0;
@@ -28,7 +28,7 @@ void TableViewExt::initDefaultItems(int total)
 
 	CCLOG("initDefaultItems total=%d", total);
 
-	for (int i = 0; i < total; i++)
+	for (int i = 1; i <= total; i++)
 	{
 		auto widget = createDefaultWidget();
 		widget->setContentSize(_impl->sizeSource(i));
@@ -87,12 +87,12 @@ void TableViewExt::_jumpTo(Ref* i,int index)
 	std::map<int, bool> checkTab;
 	Size size = self->getContentSize();
 	auto items = self->getItems();
-	for (int i = _headIndex; i < _tailIndex; i++)
+	for (int i = _headIndex; i <= _tailIndex; i++)
 	{
 		checkTab.insert(std::pair<int, bool>(i, false));
 	}
 	float const z = 0;
-	auto item = items.at(index);
+	auto item = items.at(index-1);
 
 	//CCLOG("_jumpTo index=%d", index);
 	//CCLOG("_jumpTo items.size()=%d", items.size());
@@ -115,17 +115,17 @@ void TableViewExt::_jumpTo(Ref* i,int index)
 		_innerP = destX;
 	}
 
-	for (int i = index; i >= 0; i--)
+	for (int i = index; i >= 1; i--)
 	{
-		if (!checkInView(items.at(i)))
+		if (!checkInView(items.at(i-1)))
 		{
 			break;
 		}
 		_headIndex = i;
 	}
-	for (int i = index; i < items.size(); i++)
+	for (int i = index; i <= items.size(); i++)
 	{
-		if (!checkInView(items.at(i)))
+		if (!checkInView(items.at(i-1)))
 		{
 			break;
 		}
@@ -135,7 +135,7 @@ void TableViewExt::_jumpTo(Ref* i,int index)
 	{
 		if (checkTab.find(i) == checkTab.end())
 		{
-			items.at(i)->addChild(_loadSource(i));
+			items.at(i-1)->addChild(_loadSource(i));
 		}
 		checkTab[i] = true;
 	}
@@ -149,8 +149,8 @@ void TableViewExt::_jumpTo(Ref* i,int index)
 		}
 	}
 
-	//CCLOG("_jumpTo self._headIndex=%d", _headIndex);
-	//CCLOG("_jumpTo self._tailIndex=%d", _tailIndex);
+	CCLOG("_jumpTo self._headIndex=%d", _headIndex);
+	CCLOG("_jumpTo self._tailIndex=%d", _tailIndex);
 }
 
 
@@ -231,9 +231,9 @@ void TableViewExt::scrolling()
 	//CCLOG("scrolling self._headIndex=  %d", _headIndex);
 	//CCLOG("scrolling self._tailIndex= %d", _tailIndex);
 
-	if (_headIndex== nil)
+	if (_headIndex == nil)
 	{
-		for (int i = _tailIndex; i >= 0; i--)
+		for (int i = _tailIndex; i >= 1; i--)
 		{
 			Widget* item = self->getItem(i-1);
 			if (!checkInView(item)) 
@@ -253,9 +253,9 @@ void TableViewExt::scrolling()
 	if (_tailIndex == nil)
 	{
 		Vector<Widget*> items = self->getItems();
-		for (int i = 0; i < items.size(); i++)
+		for (int i = _headIndex; i <= items.size(); i++)
 		{
-			Widget* item = items.at(i);
+			Widget* item = items.at(i-1);
 			if (!checkInView(item))
 			{
 				break;
@@ -271,7 +271,7 @@ void TableViewExt::scrolling()
 		return;
 	}
 
-	if (_innerP==nil) 
+	if (_innerP == nil) 
 	{
 		//CCLOG("scrolling _innerP == nil");
 		return;
@@ -279,7 +279,7 @@ void TableViewExt::scrolling()
 
 	ScrollView::Direction direction = self->getDirection();
 	bool isForward = false;
-	if (ScrollView::Direction::VERTICAL==direction) 
+	if (ScrollView::Direction::VERTICAL == direction) 
 	{
 		float py = self->getInnerContainer()->getPositionY();
 		if (_innerP < py) 
@@ -299,38 +299,45 @@ void TableViewExt::scrolling()
 	}
 
 	// CCLOG("scrolling isForward = ,%d", isForward);
-	Node* item;
+	CCLOG("tailIndex = %d | _headIndex = %d", _tailIndex, _headIndex);
+	Node* item = nullptr;
 	if (isForward) 
 	{
-		CCLOG("scrolling isForward = true, _tailIndex = %d", _tailIndex - 1);
-		item = self->getItem(_tailIndex-1);
+		//CCLOG("scrolling isForward = true, _tailIndex = %d", _tailIndex - 1);
+		item = self->getItem(_tailIndex - 1);
 		if (checkInView(item)) 
 		{
-			do
+			while (true) 
 			{
 				item = self->getItem(_tailIndex);
-				if (nullptr == item) 
+				if (nullptr == item)
+				{
+					break;
+				}
+				if (!checkInView(item))
 				{
 					break;
 				}
 				_tailIndex += 1;
+				if (_tailIndex == 50) { CCLOG("1 _tailIndex = 50"); }
 				item->addChild(_loadSource(_tailIndex));
-			} while (true);
+			}
 
-			do
+			while (true) 
 			{
-				item = self->getItem(_headIndex-1);
-				if (checkInView(item)) 
+				item = self->getItem(_headIndex - 1);
+				if (checkInView(item))
 				{
 					break;
 				}
 				item->removeAllChildren();
 				_impl->unloadSource(_headIndex);
 				_headIndex += 1;
-			} while (true);
+			}
 		}
 		else 
 		{
+			CCLOG("scrolling isForward = true,_headIndex = nil , _headIndex = %d | _tailIndex = %d", _headIndex,_tailIndex);
 			for (int i = _headIndex; i <= _tailIndex; i++)
 			{
 				item = self->getItem(i-1);
@@ -339,7 +346,7 @@ void TableViewExt::scrolling()
 				_headIndex = nil;
 			}
 
-			do
+			while (true) 
 			{
 				item = self->getItem(_tailIndex);
 				if (nullptr == item)
@@ -350,35 +357,35 @@ void TableViewExt::scrolling()
 				{
 					_tailIndex += 1;
 					item->addChild(_loadSource(_tailIndex));
-					if (nil == _headIndex) 
+					if (nil == _headIndex)
 					{
 						_headIndex = _tailIndex;
 					}
 				}
-				else 
+				else
 				{
-					if (nil!=_headIndex) 
+					if (nil != _headIndex)
 					{
 						break;
 					}
-					else 
+					else
 					{
 						_tailIndex += 1;
 					}
 				}
-			} while (true);
+			}
 		}
 	}
 	else 
 	{
-		CCLOG("scrolling isForward = false, _headIndex = %d", _headIndex - 1);
+		//CCLOG("scrolling isForward = false, _headIndex = %d", _headIndex - 1);
 		item = self->getItem(_headIndex - 1);
 		if (checkInView(item)) 
 		{
-			do
+			while (true) 
 			{
 				item = self->getItem(_headIndex - 2);
-				if (nullptr == item) 
+				if (nullptr == item)
 				{
 					break;
 				}
@@ -388,11 +395,11 @@ void TableViewExt::scrolling()
 				}
 				_headIndex -= 1;
 				item->addChild(_loadSource(_headIndex));
-			} while (true);
+			}
 
-			do
+			while (true) 
 			{
-				item = self->getItem(_tailIndex-1);
+				item = self->getItem(_tailIndex - 1);
 				if (checkInView(item))
 				{
 					break;
@@ -400,49 +407,48 @@ void TableViewExt::scrolling()
 				item->removeAllChildren();
 				_impl->unloadSource(_tailIndex);
 				_tailIndex -= 1;
-
-			} while (true);
+			}
 
 		}
 		else 
 		{
+			CCLOG("scrolling isForward = false,_tailIndex = nil , _headIndex = %d | _tailIndex = %d", _headIndex, _tailIndex);
 			for (int i = _headIndex; i <= _tailIndex; i++)
 			{
-				item = self->getItem(i-1);
+				item = self->getItem(i - 1);
 				item->removeAllChildren();
 				_impl->unloadSource(i);
 				_tailIndex = nil;
 			}
 
-			do
+			while (true) 
 			{
 				item = self->getItem(_headIndex - 2);
-				if (nullptr == item) 
+				if (nullptr == item)
 				{
 					break;
 				}
-				if (checkInView(item)) 
+				if (checkInView(item))
 				{
 					_headIndex -= 1;
 					item->addChild(_loadSource(_headIndex));
-					if (nil == _tailIndex) 
+					if (nil == _tailIndex)
 					{
 						_tailIndex = _headIndex;
 					}
 				}
-				else 
+				else
 				{
-					if (nil != _tailIndex) 
+					if (nil != _tailIndex)
 					{
 						break;
 					}
-					else 
+					else
 					{
 						_headIndex -= 1;
 					}
 				}
-
-			} while (true);
+			}
 		}
 	}
 
