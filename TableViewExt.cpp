@@ -34,34 +34,35 @@ void TableViewExt::initDefaultItems(int total)
 		widget->setContentSize(_impl->sizeSource(i));
 		self->pushBackCustomItem(widget);
 	}
+	self->forceDoLayout();
 }
 
 void TableViewExt::insertRow(int index)
 {
 	auto widget = createDefaultWidget();
 	widget->setContentSize(_impl->sizeSource(index));
-	self->insertCustomItem(widget,index-1);
+	self->insertCustomItem(widget,index - 1);
 	if (index > _tailIndex)
 	{
 		return;
 	}
-	if (index<=_headIndex) 
+	if (index <=_headIndex) 
 	{
 		index = _headIndex;
 	}
-	auto item = self->getItem(index-1);
+	auto item = self->getItem(index - 1);
 	item->addChild(_loadSource(index));
 	_tailIndex += 1;
 }
 
 void TableViewExt::deleteRow(int index)
 {
-	self->removeItem(index-1);
-	if (index>_tailIndex) 
+	self->removeItem(index - 1);
+	if (index > _tailIndex) 
 	{
 		return;
 	}
-	if (index<_headIndex) 
+	if (index < _headIndex) 
 	{
 		_headIndex -= 1;
 	}
@@ -69,7 +70,7 @@ void TableViewExt::deleteRow(int index)
 	{
 		_impl->unloadSource(index);
 	}
-	auto item = self->getItem(_tailIndex-1);
+	auto item = self->getItem(_tailIndex - 1);
 	if (item) 
 	{
 		item->addChild(_loadSource(_tailIndex));
@@ -78,6 +79,7 @@ void TableViewExt::deleteRow(int index)
 	{
 		_tailIndex -= 1;
 	}
+	CCLOG("deleteRow : tailIndex = %d | _headIndex = %d", _tailIndex, _headIndex);
 }
 
 void TableViewExt::_jumpTo(Ref* i,int index)
@@ -144,7 +146,7 @@ void TableViewExt::_jumpTo(Ref* i,int index)
 	{
 		if (false == p.second)
 		{
-			items.at(p.first)->removeAllChildren();
+			items.at(p.first-1)->removeAllChildren();
 			_impl->unloadSource(p.first);
 		}
 	}
@@ -178,10 +180,10 @@ void TableViewExt::performWithDelay(CallFunc* func)
 Node* TableViewExt::_loadSource(int index)
 {
 	Node* node = _impl->loadSource(index);
-
-	node->ignoreAnchorPointForPosition(false);
-	node->setAnchorPoint(Vec2::ZERO);
-	node->setPosition(Vec2::ZERO);
+	node->setPosition(_itemPos);
+	//node->ignoreAnchorPointForPosition(false);
+	//node->setAnchorPoint(Vec2::ZERO);
+	//node->setPosition(Vec2::ZERO);
 	return node;
 }
 
@@ -299,7 +301,7 @@ void TableViewExt::scrolling()
 	}
 
 	// CCLOG("scrolling isForward = ,%d", isForward);
-	CCLOG("tailIndex = %d | _headIndex = %d", _tailIndex, _headIndex);
+	//CCLOG("tailIndex = %d | _headIndex = %d", _tailIndex, _headIndex);
 	Node* item = nullptr;
 	if (isForward) 
 	{
@@ -319,7 +321,7 @@ void TableViewExt::scrolling()
 					break;
 				}
 				_tailIndex += 1;
-				if (_tailIndex == 50) { CCLOG("1 _tailIndex = 50"); }
+				
 				item->addChild(_loadSource(_tailIndex));
 			}
 
@@ -337,7 +339,7 @@ void TableViewExt::scrolling()
 		}
 		else 
 		{
-			CCLOG("scrolling isForward = true,_headIndex = nil , _headIndex = %d | _tailIndex = %d", _headIndex,_tailIndex);
+			//CCLOG("scrolling isForward = true,_headIndex = nil , _headIndex = %d | _tailIndex = %d", _headIndex,_tailIndex);
 			for (int i = _headIndex; i <= _tailIndex; i++)
 			{
 				item = self->getItem(i-1);
@@ -412,7 +414,7 @@ void TableViewExt::scrolling()
 		}
 		else 
 		{
-			CCLOG("scrolling isForward = false,_tailIndex = nil , _headIndex = %d | _tailIndex = %d", _headIndex, _tailIndex);
+			//CCLOG("scrolling isForward = false,_tailIndex = nil , _headIndex = %d | _tailIndex = %d", _headIndex, _tailIndex);
 			for (int i = _headIndex; i <= _tailIndex; i++)
 			{
 				item = self->getItem(i - 1);
@@ -455,10 +457,13 @@ void TableViewExt::scrolling()
 }
 
 
-void TableViewExt::attachTo(ListView* listview, ITableView* impl)
+void TableViewExt::attachTo(ListView* listview, Size itemSize, ITableView* impl)
 {
 	_impl = impl;
 	self = listview;
+	_itemSize = itemSize;
+	_itemPos.x = _itemSize.width / 2;
+	_itemPos.y = _itemSize.height / 2;
 
 	Size const size = listview->getContentSize();
 	_checkOffsetX = size.width / 2;
@@ -466,10 +471,10 @@ void TableViewExt::attachTo(ListView* listview, ITableView* impl)
 	_checkWidth = size.width * 2;
 	_checkHeight = size.height * 2;
 
-	CCLOG("_checkOffsetX = %f", _checkOffsetX);
-	CCLOG("_checkOffsetY = %f", _checkOffsetY);
-	CCLOG("_checkWidth = %f", _checkWidth);
-	CCLOG("_checkHeight = %f", _checkHeight);
+	//CCLOG("_checkOffsetX = %f", _checkOffsetX);
+	//CCLOG("_checkOffsetY = %f", _checkOffsetY);
+	//CCLOG("_checkWidth = %f", _checkWidth);
+	//CCLOG("_checkHeight = %f", _checkHeight);
 
 	_headIndex = 0;
 	_tailIndex = -1;

@@ -24,9 +24,12 @@ private:
 	float _checkWidth;
 	float _checkHeight;
 	float _innerP;
-	int _headIndex;
-	int _tailIndex;
+	
 	int nil;
+
+	Size _itemSize;
+	Vec2 _itemPos;
+
 	ITableView* _impl;
 	
 	Node* _loadSource(int index);
@@ -36,6 +39,9 @@ public:
 	TableViewExt();
 	~TableViewExt();
 
+	int _headIndex;
+	int _tailIndex;
+
 	Layout* createDefaultWidget();
 	void initDefaultItems(int total);
 	void insertRow(int index);
@@ -44,7 +50,7 @@ public:
 
 	bool checkInView(Node* item);
 	void scrolling();
-	void attachTo(ListView* lv, ITableView* impl);
+	void attachTo(ListView* lv, Size itemSize,ITableView* impl);
 
 	void performWithDelay(CallFunc* func);
 };
